@@ -1,0 +1,2 @@
+datasets  # download datasets (gsm8k per ora)
+tqdm # Utile per la progressione durante l'elaborazione dei prompt

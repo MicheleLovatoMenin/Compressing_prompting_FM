@@ -1,0 +1,15 @@
+# Python environments
+fm_env/
+.venv/
+
+# Byte-compiled Python files
+__pycache__/
+*.pyc
+
+# Dataset generati localmente
+*.json 
+*.csv
+
+# File di sistema e log
+.DS_Store
+*.log
