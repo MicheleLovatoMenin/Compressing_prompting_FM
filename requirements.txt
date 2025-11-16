@@ -1,2 +1,6 @@
 datasets  # download datasets (gsm8k per ora)
 tqdm # Utile per la progressione durante l'elaborazione dei prompt
+spacy
+
+#you have to run these commands separately after installing spacy directly from the command line
+#python -m spacy download en_core_web_sm

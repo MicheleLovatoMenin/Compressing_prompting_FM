@@ -3,57 +3,58 @@ import json
 from datasets import load_dataset
 from tqdm import tqdm
 
-# --- CONFIGURAZIONE ---
+# --- CONFIGURATION ---
 DATASET_NAME = "gsm8k"
 DATASET_CONFIG = "main"
 DATASET_SPLIT = "test"
-# 1. MODIFICA: Definiamo la cartella di output
+# 1. MODIFICATION: Define the output folder
 OUTPUT_DIR = "datasets"
 OUTPUT_FILENAME = "gsm8k_test_set.json"
-NUM_SAMPLES = 50 # Numero di campioni da estrarre
+NUM_SAMPLES = 50 # Number of samples to extract
 
-# --- FUNZIONE PRINCIPALE ---
+# --- MAIN FUNCTION ---
 
 def extract_and_save_dataset(num_samples: int = NUM_SAMPLES, output_dir: str = OUTPUT_DIR, output_file: str = OUTPUT_FILENAME):
     """
-    Carica il dataset GSM8K (split test) e salva i primi N campioni come file JSON
-    nella cartella specificata.
+    Loads the GSM8K dataset (test split) and saves the first N samples as a JSON file
+    in the specified folder.
     """
-    print(f"Caricamento dataset {DATASET_NAME} ({DATASET_SPLIT} split)...")
+    print(f"Loading dataset {DATASET_NAME} ({DATASET_SPLIT} split)...")
     try:
-        # Carica il dataset specificato
+        # Load the specified dataset
         dataset = load_dataset(DATASET_NAME, DATASET_CONFIG, split=DATASET_SPLIT)
     except Exception as e:
-        print(f"Errore nel caricamento del dataset: {e}")
+        print(f"Error loading the dataset: {e}")
         return
 
-    # Limita al numero di campioni specificato o al totale disponibile
+    # Limit to the specified number of samples or the total available
     if num_samples > len(dataset):
         num_samples = len(dataset)
-        print(f"Attenzione: Usando tutti i {num_samples} esempi disponibili nello split.")
+        print(f"Warning: Using all {num_samples} available samples in the split.")
     
-    # Converte i primi N campioni in una lista di dizionari Python
+    # Convert the first N samples into a list of Python dictionaries
     data_list = []
-    print(f"Estrazione e conversione dei primi {num_samples} campioni...")
+    print(f"Extracting and converting the first {num_samples} samples...")
     for i in tqdm(range(num_samples)):
         data_list.append(dataset[i])
         
-    # 2. MODIFICA: Creazione della cartella di output
+    # 2. MODIFICATION: Create the output folder
     os.makedirs(output_dir, exist_ok=True)
     
-    # Crea il percorso completo del file
+    # Create the full file path
     full_output_path = os.path.join(output_dir, output_file)
         
-    # --- SALVATAGGIO DEI DATI ---
+    # --- DATA SAVING ---
     try:
+        # Open the file and write the JSON data
         with open(full_output_path, 'w', encoding='utf-8') as f:
             json.dump(data_list, f, indent=4)
             
-        print(f"\n--- SALVATAGGIO COMPLETATO ---")
-        print(f"Dati salvati in: {os.path.abspath(full_output_path)}")
-        print(f"File contiene {len(data_list)} campioni di GSM8K.")
+        print(f"\n--- SAVING COMPLETE ---")
+        print(f"Data saved to: {os.path.abspath(full_output_path)}")
+        print(f"File contains {len(data_list)} GSM8K samples.")
     except Exception as e:
-        print(f"Errore durante il salvataggio del file: {e}")
+        print(f"Error while saving the file: {e}")
 
 
 if __name__ == "__main__":
