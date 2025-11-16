@@ -4,3 +4,10 @@ spacy
 
 #you have to run these commands separately after installing spacy directly from the command line
 #python -m spacy download en_core_web_sm
+
+
+# llm section
+groq
+
+# variabili d'ambiente
+python-dotenv

@@ -13,3 +13,7 @@ __pycache__/
 # File di sistema e log
 .DS_Store
 *.log
+
+# variabili d'ambiente
+.env
+*.env
