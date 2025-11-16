@@ -39,3 +39,33 @@ The project evaluates differences in:
 to quantify the benefits of **Compressing Prompting**.
 
 ---
+
+## Installation and Setup
+
+Follow the steps below to correctly install and run the project.
+
+### 1. Create and activate a virtual environment (recommended)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate      # macOS / Linux
+# .venv\Scripts\activate       # Windows
+```
+
+### 2. Install project dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Install the SpaCy model
+
+SpaCy models must be installed separately from the requirements file.
+
+```bash
+python -m spacy download en_core_web_sm
+```
+
+
+
+
