@@ -8,16 +8,16 @@ from groq import Groq
 # ==========================================
 # CONFIGURAZIONE
 # ==========================================
-INPUT_FILE = "datasets/gsm8k_compressed_0.8.json"
+INPUT_FILE = "datasets/gsm8k_dataset_5shot.json"
 OUTPUT_FILE = "results_evaluation_api.json"
 
 # Inserisci qui la tua chiave API di Groq
 # (O meglio, impostala come variabile d'ambiente, ma per ora scrivila qui se è un test locale)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")  
 
-
 # Modello da usare su Groq (Llama 3 8B è perfetto per il confronto)
 MODEL_ID = "llama-3.1-8b-instant"
+#MODEL_ID = "llama-3.3-70b-versatile"
 
 # ==========================================
 # UTILS
