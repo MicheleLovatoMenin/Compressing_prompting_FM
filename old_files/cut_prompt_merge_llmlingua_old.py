@@ -8,15 +8,16 @@ from llmlingua import PromptCompressor
 # ==========================================
 # CONFIGURATION
 # ==========================================
-# Assicurati che questo file sia quello generato dallo script di formattazione
-INPUT_FILE = "datasets/dataset_gsm8k_formatted_8shot.json" 
-OUTPUT_FILE = "datasets/gsm8k_compressed0.1.json"
+INPUT_FILE = "datasets/dataset_formatted_5shot.json"
+OUTPUT_FILE = "datasets/gsm8k_dataset_5shot.json"
 
-# rate=0.5 significa "tieni il 50% dei token del contesto"
-TARGET_RATE = 0.1
+# How much do we want to compress with LLMLingua?
+# rate=0.5 means "keep 50% of the tokens" (halve the length).
+# You can lower it to 0.3 to be more aggressive (cut 70%).
+TARGET_RATE = 0.5
 
 # ==========================================
-# RULE-BASED LOGIC (ORIGINALE - NON MODIFICATA)
+# RULE-BASED LOGIC
 # ==========================================
 ARTICLES = {'a', 'an', 'the'}
 CONJUNCTIONS = {'and', 'but', 'or', 'so', 'yet', 'for', 'nor'}
@@ -68,86 +69,56 @@ def main():
         print(f"Error reading file: {e}")
         return
 
-    # Scommenta questa riga se vuoi fare un test veloce sui primi 10
+    # Limit to 50 for testing purposes (remove this line to process all)
     data = data[:50]
     print(f"Processing {len(data)} rows...")
 
-    # 1. EXECUTE RULE-BASED COMPRESSION (UNCHANGED)
+    # 1. EXECUTE RULE-BASED COMPRESSION
     print("\n[1/2] Running Rule-Based Compression...")
     for entry in data:
-        # Se esiste la chiave 'question', la usiamo come base
-        # (Nota: se hai usato il mio script precedente, 'question' è il full prompt)
-        base_text = entry.get('question', '')
+        # If the key 'question' exists, rename it to 'question_original'
+        # .pop() retrieves the value, removes the old key, and we assign it to the new key
+        if 'few_shot_prompt' in entry:
+            entry['question_original'] = entry.pop('few_shot_prompt')
         
-        # Salviamo l'originale se non c'è già una copia
-        if 'question_original' not in entry:
-            entry['question_original'] = base_text
-        
-        # Eseguiamo la tua logica
-        entry['question_rulebased'] = rule_based_compress(base_text)
-        
-        # Prepariamo il campo per il prossimo step
-        entry['question_llmlingua2'] = ""
+        # Now use 'question_original' as the base
+        if 'question_original' in entry:
+            entry['question_rulebased'] = rule_based_compress(entry['question_original'])
+            # Initialize the field for the next step
+            entry['question_llmlingua2'] = ""
+        else:
+            print("Warning: Found entry without a question!")
 
-    # 2. EXECUTE LLMLINGUA-2 (MODIFIED SECTION)
+    # 2. EXECUTE LLMLINGUA-2 (BERT-based, fast)
     print("\n[2/2] Loading LLMLingua-2 (Microsoft BERT)...")
     clean_memory()
     
-    # Usiamo il modello specifico addestrato su MeetingBank
     compressor_v2 = PromptCompressor(
         model_name="microsoft/llmlingua-2-bert-base-multilingual-cased-meetingbank",
         use_llmlingua2=True,
         device_map="cuda" if torch.cuda.is_available() else "cpu"
     )
     
-    print(f"      Compressing with LLMLingua-2 (Rate: {TARGET_RATE})...")
-    
+    print("      Compressing with LLMLingua-2...")
     for i, entry in enumerate(data):
+        if 'question_original' in entry:
+            result = compressor_v2.compress_prompt(
+                entry['question_original'], 
+                rate=TARGET_RATE, 
+                force_tokens=['?', '.', '=']
+            )
+            # Write directly into the original list (in-place modification)
+            entry['question_llmlingua2'] = result['compressed_prompt']
         
-        # A. Recupero Context e Target
-        # Cerchiamo i campi separati creati dallo script di formattazione.
-        # Se non esistono, usiamo 'question_original' come fallback per il contesto.
-        context_text = entry.get('context_only', entry.get('question_original', ''))
-        target_text = entry.get('target_only', '') # Questo resta vuoto se non c'è il campo, ed è ok.
-
-        # B. Compressione Intelligente
-        try:
-            # Comprimiamo SOLO il contesto (gli esempi few-shot)
-            if context_text:
-                result = compressor_v2.compress_prompt(
-                    context_text, 
-                    rate=TARGET_RATE, 
-                    # MODIFICA: Aggiunti numeri e operatori matematici essenziali
-                    force_tokens=[
-                        '?', '.', '=', '+', '-', '*', '/', 
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-                    ]
-                )
-                compressed_context = result['compressed_prompt']
-            else:
-                compressed_context = ""
-
-            # C. Ricostruzione
-            # Il prompt finale è: Contesto Compresso + Domanda Target Intatta
-            # Se target_text era vuoto, il risultato sarà solo il contesto compresso (comportamento fallback)
-            final_prompt = f"{compressed_context}\n{target_text}".strip()
-            
-            entry['question_llmlingua2'] = final_prompt
-            
-        except Exception as e:
-            print(f"Error on row {i}: {e}")
-            entry['question_llmlingua2'] = entry.get('question_original', '')
-
-        if i % 10 == 0: 
-            print(f"      Done {i}/{len(data)}")
+        if i % 10 == 0: print(f"      Done {i}/{len(data)}")
 
     del compressor_v2
     clean_memory()
 
-    print(f"\nSaving processed dataset to {OUTPUT_FILE}...")
+    print(f"\nSaving clean dataset to {OUTPUT_FILE}...")
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
-    print("Done! Evaluation ready.")
+    print("Done! You can now run the evaluation script.")
 
 if __name__ == "__main__":
     main()
